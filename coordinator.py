@@ -19,8 +19,9 @@ def graphs_flow(dirname):
 def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', dest='workers', type=int, default=4)
-    parser.add_argument('-i', dest='input_path')
-    parser.add_argument('-o', dest='output_path')
+    parser.add_argument('-i', dest='input_path', default='./input')
+    parser.add_argument('-o', dest='output_path', default='./out')
+    parser.add_argument('-c', dest='inv', default='adr')
     return parser
 
 
@@ -33,14 +34,17 @@ def main():
     process = []
 
     for x in range(args.workers):
-        gp = worker.GraphProcessor(queue=queue, output=args.output_path)
+        gp = worker.GraphProcessor(queue=queue,
+                                   output=args.output_path,
+                                   invariants=args.inv)
         p = Process(target=gp.run)
-        p.daemon = True
         workers.append(gp)
         process.append(p)
         p.start()
     for g in graphs_flow(args.input_path):
         queue.put(g)
+    for x in range(0, args.workers):
+        queue.put("done")
 
 
 main()
